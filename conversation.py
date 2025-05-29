@@ -43,7 +43,7 @@ class ConversationHistory:
         client: genai.Client,
         message: str,
         generation_config: Optional[types.GenerateContentConfig] = None,
-    ) -> str:
+    ) -> types.GenerateContentResponse:
         self.add_user_message(message)
         try:
             response = client.models.generate_content(
@@ -60,12 +60,13 @@ class ConversationHistory:
                 block_reason = getattr(
                     getattr(response, 'prompt_feedback', None), 'block_reason', None)
                 if block_reason:
-                    model_response_text = f"[Blocked by Safety Setting: {block_reason}]"
+                    model_response_text = f"[Blocked by Safety Setting: {
+                        block_reason}]"
                 else:
                     model_response_text = "[No response text found]"
 
             self.add_model_response(model_response_text)
-            return model_response_text
+            return response
         except Exception as e:
             print(f"Error during API call: {e}")
             self._history.pop()  # rollback
@@ -148,7 +149,7 @@ class ConversationManager(metaclass=SingletonBase):
                 f"Conversation with ID '{conversation_id}' not found.")
 
         try:
-            response_text = conversation.send_message(
+            response = conversation.send_message(
                 model_name=model_name,
                 client=client,
                 message=message,
@@ -156,14 +157,15 @@ class ConversationManager(metaclass=SingletonBase):
             )
             manager_logger.info(
                 f"Successfully sent message and received response for conversation '{conversation_id}'.")
-            return response_text
+            return response.text
         except ValueError as ve:
             manager_logger.error(
                 f"ValueError during message sending for conversation '{conversation_id}': {ve}", exc_info=False)
             raise
         except Exception as e:
             manager_logger.error(
-                f"An unexpected error occurred while sending message to conversation '{conversation_id}': {e}",
+                f"An unexpected error occurred while sending message to conversation '{
+                    conversation_id}': {e}",
                 exc_info=True
             )
             raise

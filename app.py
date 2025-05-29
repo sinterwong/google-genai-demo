@@ -133,19 +133,10 @@ def send_message_api(conversation_id: str):
                 404, description=f"Conversation with ID '{conversation_id}' not found after attempting to send message.")
 
         return jsonify({"response": model_response})
-
     except ValueError as ve:
         manager_logger.error(
             f"ValueError in send_message_api for {conversation_id}: {ve}")
         abort(400, description=str(ve))
-    except types.generation_types.BlockedPromptException as bpe:
-        manager_logger.warning(
-            f"Prompt blocked for conversation {conversation_id}: {bpe}")
-        return jsonify({"error": "Prompt blocked by safety settings.", "details": str(bpe)}), 400
-    except types.generation_types.StopCandidateException as sce:
-        manager_logger.warning(
-            f"Content generation stopped for conversation {conversation_id} due to safety: {sce}")
-        return jsonify({"error": "Content generation stopped due to safety settings.", "details": str(sce)}), 400
     except Exception as e:
         manager_logger.error(
             f"Unexpected error in send_message_api for {conversation_id}: {e}", exc_info=True)
