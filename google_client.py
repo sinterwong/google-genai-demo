@@ -1,7 +1,8 @@
-from google import genai
 import os
+
+from google import genai
+from google.cloud import bigquery
 from google.genai import types
-from config import RAG_ASSISTANT_CONFIG
 
 GOOGLE_PROJECT_NAME = os.getenv("GOOGLE_PROJECT_NAME")
 GOOGLE_REGION = os.getenv("GOOGLE_REGION")
@@ -13,6 +14,8 @@ client = genai.Client(
     project=GOOGLE_PROJECT_NAME,
     location=GOOGLE_REGION,
 )
+
+bigquery_client = bigquery.Client(project=GOOGLE_PROJECT_NAME)
 
 
 # class Rensponse():
@@ -40,8 +43,9 @@ client = genai.Client(
 # client = Client()
 
 
-def test():
-    model_name = "gemini-2.5-flash-preview-04-17"
+def test_genai_client():
+    from config import RAG_ASSISTANT_CONFIG
+    model_name = "gemini-2.5-flash-preview-05-20"
     contents = [
         types.Content(
             role="user",
@@ -60,5 +64,22 @@ def test():
     print(response.text)
 
 
+def test_bigquery_client():
+    query = """
+        SELECT
+            table_catalog, table_schema, table_name
+        FROM
+            `{}.INFORMATION_SCHEMA.TABLES`
+        LIMIT 100
+    """.format(GOOGLE_PROJECT_NAME)
+
+    query_job = bigquery_client.query(query)
+
+    print("Tables:")
+    for row in query_job:
+        print("\t{}.{}.{}".format(row[0], row[1], row[2]))
+
+
 if __name__ == "__main__":
-    test()
+    # test_genai_client()
+    test_bigquery_client()

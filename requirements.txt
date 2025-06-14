@@ -2,3 +2,5 @@ google-genai
 flask 
 flask-cors
 python-dotenv
+google-cloud-bigquery
+gunicorn
